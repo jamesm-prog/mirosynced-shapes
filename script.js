@@ -5,6 +5,14 @@ function log(message) {
   console.log('[Synced Shapes]', message);
 }
 
+async function init() {
+  await miro.board.ui.on('icon:click', async () => {
+    // e.g., open a panel or perform an action
+    await miro.board.ui.openPanel({url: 'panel.html'});
+  });
+}
+init();
+
 // Generate a simple unique id for a master group.
 function generateMasterId() {
   return 'master-' + Date.now() + '-' + Math.floor(Math.random() * 100000);
@@ -172,3 +180,4 @@ miro.onReady(() => {
 
   log('Synced Shapes app ready. Select a shape to begin.');
 });
+
