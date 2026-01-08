@@ -1,0 +1,17 @@
+{
+  "appId": "synced-shapes",
+  "name": "Synced Shapes",
+  "icon": "https://mirostatic.com/app/static/miro-logo.png",
+  "sdkUri": "index.html",
+  "scopes": [
+    "boards:read",
+    "boards:write"
+  ],
+  "redirectUris": [],
+  "permissions": {
+    "board": {
+      "read": true,
+      "write": true
+    }
+  }
+}
