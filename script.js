@@ -8,7 +8,7 @@ function log(message) {
 async function init() {
   await miro.board.ui.on('icon:click', async () => {
     // e.g., open a panel or perform an action
-    await miro.board.ui.openPanel({url: 'panel.html'});
+    await miro.board.ui.openPanel({url: 'https://jamesm-prog.github.io/mirosynced-shapes/panel.html'});
   });
 }
 init();
@@ -180,4 +180,5 @@ miro.onReady(() => {
 
   log('Synced Shapes app ready. Select a shape to begin.');
 });
+
 
