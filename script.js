@@ -1,17 +1,13 @@
+
+// ---- helpers ----
+const META_KEY = 'syncedShapes';
+
 // A small helper to show status messages in the panel.
 function log(message) {
   const el = document.getElementById('log');
   el.textContent = message;
   console.log('[Synced Shapes]', message);
 }
-
-async function init() {
-  await miro.board.ui.on('icon:click', async () => {
-    // e.g., open a panel or perform an action
-    await miro.board.ui.openPanel({url: 'https://jamesm-prog.github.io/mirosynced-shapes/panel.html'});
-  });
-}
-init();
 
 // Generate a simple unique id for a master group.
 function generateMasterId() {
@@ -40,23 +36,17 @@ async function getSelectedShape() {
   return shapes[0];
 }
 
-// Set the selected shape as master by attaching a masterId in appData.
+// ---- core features ----
+
+// Set the selected shape as master by attaching a masterId in item metadata.
 async function setSelectedAsMaster() {
   const shape = await getSelectedShape();
   if (!shape) return;
 
   const masterId = generateMasterId();
 
-  // appData is app-specific metadata; we store our masterId there.
-  await shape.update({
-    appData: {
-      // Use your own namespace key to avoid conflicts
-      syncedShapes: {
-        masterId,
-        isMaster: true
-      }
-    }
-  });
+  await shape.setMetadata(META_KEY, { masterId, isMaster: true });
+  await shape.sync(); // v2: persist the metadata change
 
   log(`Master set. masterId = ${masterId}`);
 }
@@ -66,7 +56,8 @@ async function createSyncedCopy() {
   const shape = await getSelectedShape();
   if (!shape) return;
 
-  const appData = shape.appData && shape.appData.syncedShapes;
+  const meta = await shape.getMetadata();
+  const appData = meta && meta[META_KEY];
   if (!appData || !appData.isMaster || !appData.masterId) {
     log('The selected shape is not a master. Set it as master first.');
     return;
@@ -77,19 +68,17 @@ async function createSyncedCopy() {
   // Duplicate the shape, offset a bit so it’s visible.
   const copy = await miro.board.createShape({
     content: shape.content,
-    shape: shape.shape, // same geometric type
-    x: shape.x + 250,
-    y: shape.y,
+    shape: shape.shape,           // same geometric type
+    x: (shape.x ?? 0) + 250,
+    y: shape.y ?? 0,
     width: shape.width,
     height: shape.height,
+    // style is an object: we can copy and then assign
     style: { ...shape.style },
-    appData: {
-      syncedShapes: {
-        masterId,
-        isMaster: false
-      }
-    }
   });
+
+  await copy.setMetadata(META_KEY, { masterId, isMaster: false });
+  await copy.sync();
 
   log(`Synced copy created for masterId = ${masterId} (copy id: ${copy.id})`);
 }
@@ -99,34 +88,34 @@ async function findMasterFromSelection() {
   const shape = await getSelectedShape();
   if (!shape) return null;
 
-  const appData = shape.appData && shape.appData.syncedShapes;
+  const meta = await shape.getMetadata();
+  const appData = meta && meta[META_KEY];
   if (!appData || !appData.masterId) {
     log('Selected shape is not part of a synced group.');
     return null;
   }
 
   const masterId = appData.masterId;
-
-  // If the selected shape itself is marked as master, just return it.
-  if (appData.isMaster) {
-    return shape;
-  }
+  if (appData.isMaster) return shape;
 
   // Otherwise, search the board for the master shape with the same masterId.
   const allItems = await miro.board.get({ type: 'shape' });
   const shapes = filterShapes(allItems);
 
-  const master = shapes.find((item) => {
-    const data = item.appData && item.appData.syncedShapes;
-    return data && data.isMaster && data.masterId === masterId;
-  });
+  // Fetch metadata in parallel for performance
+  const entries = await Promise.all(
+    shapes.map(async (item) => {
+      const m = await item.getMetadata();
+      return { item, data: m && m[META_KEY] };
+    })
+  );
 
-  if (!master) {
+  const found = entries.find((e) => e.data && e.data.isMaster && e.data.masterId === masterId);
+  if (!found) {
     log(`No master found for masterId = ${masterId}.`);
     return null;
   }
-
-  return master;
+  return found.item;
 }
 
 // Sync all copies from the current master (selected shape or its group).
@@ -134,17 +123,23 @@ async function syncCopiesFromMaster() {
   const master = await findMasterFromSelection();
   if (!master) return;
 
-  const appData = master.appData && master.appData.syncedShapes;
-  const masterId = appData.masterId;
+  const masterMeta = await master.getMetadata();
+  const { masterId } = masterMeta[META_KEY];
 
-  // Get all shapes on the board that share this masterId.
+  // Gather all shapes on the board with this masterId (excluding the master)
   const allItems = await miro.board.get({ type: 'shape' });
   const shapes = filterShapes(allItems);
 
-  const copies = shapes.filter((item) => {
-    const data = item.appData && item.appData.syncedShapes;
-    return data && data.masterId === masterId && !data.isMaster;
-  });
+  const entries = await Promise.all(
+    shapes.map(async (item) => {
+      const m = await item.getMetadata();
+      return { item, data: m && m[META_KEY] };
+    })
+  );
+
+  const copies = entries
+    .filter((e) => e.data && e.data.masterId === masterId && !e.data.isMaster)
+    .map((e) => e.item);
 
   if (copies.length === 0) {
     log(`No copies found for masterId = ${masterId}.`);
@@ -153,32 +148,32 @@ async function syncCopiesFromMaster() {
 
   // Prepare the data from master to propagate.
   const newContent = master.content;
-  const newStyle = { ...master.style };
   const newWidth = master.width;
   const newHeight = master.height;
+  const newStyle = { ...master.style };
 
-  // Update all copies.
+  // Update all copies and sync them (v2 requirement)
   await Promise.all(
-    copies.map((copy) =>
-      copy.update({
-        content: newContent,
-        style: newStyle,
-        width: newWidth,
-        height: newHeight
-      })
-    )
+    copies.map(async (copy) => {
+      copy.content = newContent;
+      Object.assign(copy.style, newStyle);  // copy style fields
+      copy.width = newWidth;
+      copy.height = newHeight;
+      await copy.sync();
+    })
   );
 
   log(`Synced ${copies.length} copies from masterId = ${masterId}.`);
 }
 
-// Hook up UI events when the Web SDK is ready.
-miro.onReady(() => {
+// ---- bootstrapping ----
+miro.onReady(async () => {
+  // Ensures SDK is ready/authorized before wiring up handlers
+  await miro.board.getInfo();
+
   document.getElementById('set-master').addEventListener('click', setSelectedAsMaster);
   document.getElementById('create-copy').addEventListener('click', createSyncedCopy);
   document.getElementById('sync-copies').addEventListener('click', syncCopiesFromMaster);
 
   log('Synced Shapes app ready. Select a shape to begin.');
 });
-
-
