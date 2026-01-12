@@ -1,6 +1,4 @@
-
-const APP_ID = '3458764654677680434'; // Your Client ID from Miro
-
+const APP_ID = '3458764654677680434'; // your app Client ID
 const COLLECTION = 'synced-shapes';
 const uuid = () => crypto.randomUUID();
 
@@ -126,18 +124,22 @@ async function syncFromMaster() {
     const child = await miro.board.getById(childId);
     if (!child) continue;
 
+    // Always sync text
     child.content = m.content;
 
+    // Optional color sync
     if (syncColor) {
       child.style.fillColor = m.style?.fillColor;
       child.style.color     = m.style?.color;
     }
 
+    // Optional font sync
     if (syncFont) {
       child.style.fontFamily = m.style?.fontFamily;
       child.style.fontSize   = m.style?.fontSize;
     }
 
+    // Keep type/geometry (not position)
     child.shape    = m.shape;
     child.width    = m.width;
     child.height   = m.height;
