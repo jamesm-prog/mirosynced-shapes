@@ -1,0 +1,56 @@
+
+/* panel.css */
+
+/* Reset basic styles */
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background-color: #fff;
+  color: #333;
+}
+
+/* Panel container */
+.panel {
+  padding: 16px;
+  max-width: 280px;
+}
+
+/* Buttons layout */
+.buttons {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+button {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:hover {
+  background: #f6f6f6;
+}
+
+/* Fieldset for property toggles */
+fieldset {
+  margin: 8px 0 12px;
+  border: 1px solid #ddd;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+legend {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Status text */
+#status {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #444;
+}
