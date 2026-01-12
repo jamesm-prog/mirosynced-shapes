@@ -4,23 +4,28 @@
 <head>
   <meta charset="utf-8" />
   <title>Synced Shapes</title>
-  <!-- Load Miro Web SDK v2 -->
   https://miro.com/app/static/sdk/v2/miro.js</script>
   panel.css
   index.js</script>
 </head>
 <body>
-  <!-- Panel UI (rendered inside miro.board.ui.openPanel) -->
   <template id="panel">
     <div class="panel">
       <h2>Synced Shapes</h2>
-      <button id="mark-master">Mark selected as Master</button>
-      <button id="duplicate-link">Duplicate & Link</button>
-      <button id="sync">Sync from Master</button>
-      <label>
-        <input type="checkbox" id="polling" />
-        Poll for master changes (safe/low-frequency)
-      </label>
+
+      <fieldset>
+        <legend>Sync properties</legend>
+        <label><input type="checkbox" id="sync-text" checked disabled /> Text (always on)</label><br />
+        <label><input type="checkbox" id="sync-color" checked /> Color (fill + text color)</label><br />
+        <label><input type="checkbox" id="sync-font" checked /> Font (family + size)</label>
+      </fieldset>
+
+      <div class="buttons">
+        <button id="mark-master">Mark selected as Master</button>
+        <button id="duplicate-link">Duplicate & Link</button>
+        <button id="sync">Sync from Master</button>
+      </div>
+
       <p id="status"></p>
     </div>
   </template>
