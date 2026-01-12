@@ -1,5 +1,5 @@
 // index.js
-const APP_ID = 'APP_ID_HERE'; // your app/client ID namespace for metadata
+const APP_ID = '3458764654677680434'; // your app/client ID namespace for metadata
 const COLLECTION = 'synced-shapes'; // board-scoped collection name
 
 // Small helpers
@@ -181,3 +181,4 @@ async function togglePolling(on) {
     status.textContent = 'Polling stopped.';
   }
 }
+
