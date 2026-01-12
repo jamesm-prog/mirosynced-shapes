@@ -1,55 +1,28 @@
-<!DOCTYPE html>
+
+<!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Synced Shapes</title>
-    <script src="https://miro.com/app/static/sdk/v2/miro.js"></script>
-    <style>
-      body {
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        margin: 0;
-        padding: 12px;
-        background: #f5f5f5;
-      }
-      h1 {
-        font-size: 16px;
-        margin-bottom: 8px;
-      }
-      button {
-        display: block;
-        width: 100%;
-        margin-bottom: 8px;
-        padding: 8px 12px;
-        border-radius: 4px;
-        border: none;
-        cursor: pointer;
-        font-size: 13px;
-      }
-      button.primary {
-        background: #4262ff;
-        color: #fff;
-      }
-      button.secondary {
-        background: #ffffff;
-        border: 1px solid #d0d4e4;
-      }
-      #log {
-        margin-top: 12px;
-        font-size: 11px;
-        color: #555;
-        white-space: pre-wrap;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Synced Shapes</h1>
-
-    <button id="set-master" class="primary">Set selected shape as master</button>
-    <button id="create-copy" class="secondary">Create synced copy</button>
-    <button id="sync-copies" class="secondary">Sync copies from master</button>
-
-    <div id="log"></div>
-
-    <script src="script.js"></script>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <title>Synced Shapes</title>
+  <!-- Load Miro Web SDK v2 -->
+  https://miro.com/app/static/sdk/v2/miro.js</script>
+  panel.css
+  index.js</script>
+</head>
+<body>
+  <!-- Panel UI (rendered inside miro.board.ui.openPanel) -->
+  <template id="panel">
+    <div class="panel">
+      <h2>Synced Shapes</h2>
+      <button id="mark-master">Mark selected as Master</button>
+      <button id="duplicate-link">Duplicate & Link</button>
+      <button id="sync">Sync from Master</button>
+      <label>
+        <input type="checkbox" id="polling" />
+        Poll for master changes (safe/low-frequency)
+      </label>
+      <p id="status"></p>
+    </div>
+  </template>
+</body>
 </html>
